@@ -54,7 +54,7 @@ MongoClient.connect("mongodb://" + params.databaseUser + ":" + params.databaseUs
         
         //Code du BOT
         client.on('ready', () => {
-	    client.user.setStatus("'!pr help' pour de l'aide !");
+	    client.user.setActivity("'!pr help' pour de l'aide !");
             console.log(`Logged in as ${client.user.tag}!`);
             client.guilds.cache.forEach( guild => {
                 db.collection("servers").updateOne({id : guild.id}, {$set :{
