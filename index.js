@@ -73,76 +73,79 @@ MongoClient.connect("mongodb://" + params.databaseUser + ":" + params.databaseUs
         });
 
         client.on('message', msg => {
+            try{
 
-            if(msg.content.startsWith("!pr ")){
-                let command = msg.content.replace('!pr ', '');
+                if(msg.content.startsWith("!pr ")){
+                    let command = msg.content.replace('!pr ', '');
 
-                switch (command) {
-                    case 'waf':
-                        getImageByKeyword('dog', msg.channel);
-                        break;
+                    switch (command) {
+                        case 'waf':
+                            getImageByKeyword('dog', msg.channel);
+                            break;
 
-                    case 'chat':
-                        getImageByKeyword('cat', msg.channel);
-                        break;
+                        case 'chat':
+                            getImageByKeyword('cat', msg.channel);
+                            break;
 
-                    case 'setAudio':
-                        if(msg.attachments.array().length === 0){
-                            msg.reply("Passe moi un fichier audio !");
-                            return;
-                        }
-                        if(msg.attachments.array()[0].size > (2 *10**6) ){
-                            msg.reply("Fichier trop gros! J'accepte des fichiers de 2mo max");
-                            return;
-                        }
-                        const stream = got.stream(msg.attachments.array()[0].url);
-                         
-                        let result = FileType.fromStream(stream).then( result => {
-                            if(!result.mime.startsWith('audio')){
-                                msg.reply("Envoie un fichier audio idio");
+                        case 'setAudio':
+                            if(msg.attachments.array().length === 0){
+                                msg.reply``("Passe moi un fichier audio !");
                                 return;
                             }
-
-                            const file = fs.createWriteStream("assets/" + msg.member.user.id + "." + result.ext);
-                            const request = https.get(msg.attachments.array()[0].url, function(response) {
-                                response.pipe(file);
-                            });
-
-                            db.collection('members').updateOne({id : msg.member.user.id}, {$set: {musicURL: msg.member.user.id + "." + result.ext}})
-                            msg.reply("C'est bon bébou !")
-                        });
-                        break;
-
-                    case 'deleteAudio':
-                        db.collection("members").findOne({id : msg.member.user.id}).then(user => {
-                            if(user && user.musicURL) {
-                                fs.unlinkSync("assets/"+user.musicURL);
-                                db.collection('members').updateOne({id : msg.member.user.id}, {$set: {musicURL: null}})
-                                msg.reply('Fait !')
+                            if(msg.attachments.array()[0].size > (2 *10**6) ){
+                                msg.reply("Fichier trop gros! J'accepte des fichiers de 2mo max");
+                                return;
                             }
-                        })
-                        break;
+                            const stream = got.stream(msg.attachments.array()[0].url);
+                            
+                            let result = FileType.fromStream(stream).then( result => {
+                                if(!result.mime.startsWith('audio')){
+                                    msg.reply("Envoie un fichier audio idio");
+                                    return;
+                                }
 
-                    case 'help':
-                        const embedMessage = new Discord.MessageEmbed()
-                        .setColor('#a8a8a8')
-                        .setTitle('Aide Petit Rat')
-                        .setDescription('Liste des commandes et informations associées au bot "Petit Rat"')
-                        .setThumbnail(client.user.avatarURL())
-                        .addFields(
-                            {name: '!pr waf', value: 'Affiche un (magnifique) chien !'},
-                            {name: '!pr chat', value: 'Affiche un chat (Commande inutile)'},
-                            {name: '!pr setAudio', value: 'Permet de rajouter une piste audio qui sera lue par le bot lorsque vous vous connecterez à un channel'},
-                            {name: '!pr deleteAudio', value: 'Permet de supprimer la piste audio associée a votre compte'}
-                        )
-                        .setTimestamp()
-                        .setFooter('Développé avec amour par Armadindon#2944');
-                        
-                        msg.channel.send(embedMessage);
-                        break;
+                                const file = fs.createWriteStream("assets/" + msg.member.user.id + "." + result.ext);
+                                const request = https.get(msg.attachments.array()[0].url, function(response) {
+                                    response.pipe(file);
+                                });
+
+                                db.collection('members').updateOne({id : msg.member.user.id}, {$set: {musicURL: msg.member.user.id + "." + result.ext}})
+                                msg.reply("C'est bon bébou !")
+                            });
+                            break;
+
+                        case 'deleteAudio':
+                            db.collection("members").findOne({id : msg.member.user.id}).then(user => {
+                                if(user && user.musicURL) {
+                                    fs.unlinkSync("assets/"+user.musicURL);
+                                    db.collection('members').updateOne({id : msg.member.user.id}, {$set: {musicURL: null}})
+                                    msg.reply('Fait !')
+                                }
+                            })
+                            break;
+
+                        case 'help':
+                            const embedMessage = new Discord.MessageEmbed()
+                            .setColor('#a8a8a8')
+                            .setTitle('Aide Petit Rat')
+                            .setDescription('Liste des commandes et informations associées au bot "Petit Rat"')
+                            .setThumbnail(client.user.avatarURL())
+                            .addFields(
+                                {name: '!pr waf', value: 'Affiche un (magnifique) chien !'},
+                                {name: '!pr chat', value: 'Affiche un chat (Commande inutile)'},
+                                {name: '!pr setAudio', value: 'Permet de rajouter une piste audio qui sera lue par le bot lorsque vous vous connecterez à un channel'},
+                                {name: '!pr deleteAudio', value: 'Permet de supprimer la piste audio associée a votre compte'}
+                            )
+                            .setTimestamp()
+                            .setFooter('Développé avec amour par Armadindon#2944');
+                            
+                            msg.channel.send(embedMessage);
+                            break;
+                    }
                 }
-            }
-
+        } catch (e) {
+            console.log(e);
+        }
 
         });
 
@@ -150,17 +153,21 @@ MongoClient.connect("mongodb://" + params.databaseUser + ":" + params.databaseUs
             /*
             TODO : METTRE EN PLACE UN PANNEAU DE CONFIGURATION
             */
-            db.collection("members").findOne({id : current.member.user.id}).then( async user =>{
-                if((current.channel) && user.musicURL){
-                    const connection = await current.channel.join();
-                    const dispatcher = connection.play('assets/' + user.musicURL);
-                    dispatcher.resume();
-                    dispatcher.on('finish', () => {
-                        current.channel.leave();
-                        dispatcher.destroy(); // end the stream
-                    });
-                }
-            })
+           try{
+                db.collection("members").findOne({id : current.member.user.id}).then( async user =>{
+                    if((current.channel) && user.musicURL){
+                        const connection = await current.channel.join();
+                        const dispatcher = connection.play('assets/' + user.musicURL);
+                        dispatcher.resume();
+                        dispatcher.on('finish', () => {
+                            current.channel.leave();
+                            dispatcher.destroy(); // end the stream
+                        });
+                    }
+                })
+        } catch(e) {
+            console.log(e);
+        }
 
 
         });
@@ -168,21 +175,30 @@ MongoClient.connect("mongodb://" + params.databaseUser + ":" + params.databaseUs
         //On met en place des méthodes afin de gérer les différents cas nécéssitant une maj de la base de données
 
         client.on('guildMemberAdd', member => {
-            db.collection("members").updateOne({id : member.user.id}, {$set :{
-                id : member.user.id,
-                name: member.user.username,
-                icon: member.user.avatarURL(),
-            }}, {upsert: true});
+            try{
+                db.collection("members").updateOne({id : member.user.id}, {$set :{
+                    id : member.user.id,
+                    name: member.user.username,
+                    icon: member.user.avatarURL(),
+                }}, {upsert: true});
+            } catch(e){
+                console.log(e)
+            }
         })
 
         client.on('guildMemberRemove', member => {
-            //On vérifie si il est dans un autre discord
-            let result = client.guilds.cache.array().some((val, index, arr)=>{
-                return result.members.cache.keyArray().includes(member.user.id);
-            });
-            if(!result){
-                db.collection('members').deleteOne({id: member.user.id});
+            try{
+                //On vérifie si il est dans un autre discord
+                let result = client.guilds.cache.array().some((val, index, arr)=>{
+                    return result.members.cache.keyArray().includes(member.user.id);
+                });
+                if(!result){
+                    db.collection('members').deleteOne({id: member.user.id});
+                }
+            } catch(e){
+                console.log(e)
             }
+        })
         })
 
         //TODO: Gérer également l'ajout et la suppression de serveurs
