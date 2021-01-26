@@ -199,7 +199,7 @@ MongoClient.connect("mongodb://" + params.databaseUser + ":" + params.databaseUs
                 console.log(e)
             }
         })
-        })
+
 
         //TODO: Gérer également l'ajout et la suppression de serveurs
 
