@@ -1,0 +1,11 @@
+{
+    "unsplashAPI": "",
+    "unsplashPrivateKey": "",
+
+    "databaseUser" : "",
+    "databaseUserPassword": "",
+    "databaseAddress": "",
+    "databaseName": "",
+
+    "discordToken": ""
+}
